@@ -73,41 +73,17 @@ describe('check_reqs', function () {
             });
         });
 
-        it('should resolve passing back tool version.', (done) => {
-            shellWhichSpy.and.returnValue('/bin/node');
-            const checkTool = checkReqs.__get__('checkTool');
-
-            checkReqs.__set__('versions', {
-                get_tool_version: getToolVersionSpy.and.returnValue(new Promise((resolve) => {
-                    return resolve('1.0.0');
-                })),
-                compareVersions: originalVersion.compareVersions
-            });
-
-            checkTool('node', '1.0.0').then(() => {
-                let actual = resolveSpy.calls.argsFor(0)[0];
-                expect(actual).toEqual({ version: '1.0.0' });
-                done();
+        it('should resolve passing back tool version.', () => {
+            return checkTool('node', '1.0.0').then(result => {
+                expect(result).toEqual({ version: '1.0.0' });
             });
         });
 
-        it('should reject because tool does not meet minimum requirement.', (done) => {
-            shellWhichSpy.and.returnValue('/bin/node');
-            const checkTool = checkReqs.__get__('checkTool');
-
-            checkReqs.__set__('versions', {
-                get_tool_version: getToolVersionSpy.and.returnValue(new Promise((resolve) => {
-                    return resolve('1.0.0');
-                })),
-                compareVersions: originalVersion.compareVersions
-            });
-
-            checkTool('node', '1.0.1').then(() => {
-                let actual = rejectSpy.calls.argsFor(0)[0];
-                expect(actual).toContain('version 1.0.1 or greater');
-                expect(actual).toContain('you have version 1.0.0');
-                done();
-            });
+        it('should reject because tool does not meet minimum requirement.', () => {
+            return checkTool('node', '1.0.1').then(
+                () => fail('Expected promise to be rejected'),
+                reason => expect(reason).toContain('version 1.0.1 or greater, you have version 1.0.0')
+            );
         });
     });
 });
